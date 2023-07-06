@@ -1,0 +1,574 @@
+import React, { useState } from "react";
+import axios from "axios";
+import { Formik, Form, useFormik } from "formik";
+import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import Stepper from "@mui/material/Stepper";
+import Step from "@mui/material/Step";
+import StepLabel from "@mui/material/StepLabel";
+import MDBox from "components/MDBox";
+import MDButton from "components/MDButton";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import FormField from "../account/components/FormField";
+import {
+  Autocomplete,
+  Dialog,
+  Fab,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  makeStyles,
+} from "@mui/material";
+import MDInput from "components/MDInput";
+import MDTypography from "components/MDTypography";
+import { I18nextProvider, useTranslation } from "react-i18next";
+import { TimePicker, DatePicker, DateTimePicker } from "formik-mui-lab";
+import dayjs from "dayjs";
+import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
+import PhoneInput from "react-phone-input-2";
+import { DesktopTimePicker } from "@mui/x-date-pickers/DesktopTimePicker";
+import { StaticTimePicker } from "@mui/x-date-pickers/StaticTimePicker";
+import { MobileDatePicker } from "@mui/x-date-pickers";
+import { useSelector } from "react-redux";
+import { attandanceSchema } from "./schema";
+import DataTable from "examples/Tables/DataTable";
+import { Color } from "@mui/material";
+import Cookies from "js-cookie";
+import ClassWiseAttandanceTable from "./attandanceTable";
+
+const initialValues = {
+  attendance: "",
+  Remark: "",
+  class_name: "",
+  academic_name: "",
+  section_name: "",
+};
+const initialValues2 = {
+  Remark: "",
+};
+// const data = [
+//   {
+//     admission_no: "4353",
+//     Student_name: "Prabhakar",
+//     attendance: "Present",
+//     selected: 0,
+//   },
+//   {
+//     admission_no: "4153",
+//     Student_name: "Himanshu",
+//     attendance: "Leave",
+//     selected: 0,
+//   },
+//   {
+//     admission_no: "4253",
+//     Student_name: "Ankit",
+//     attendance: "Absent",
+//     selected: 0,
+//   },
+//   {
+//     admission_no: "4053",
+//     Student_name: "Yash",
+//     attendance: "Present",
+//     selected: 0,
+//   },
+// ];
+
+// console.log(data);
+
+const options = ["P", "A"];
+const colors = ["success", "error"];
+// const currentDate = dayjs().toDate();
+// const currentDate = new Date();
+// const year = currentDate.getFullYear();
+// const month = currentDate.getMonth() + 1; // Note: Months are zero-based, so January is month 0
+// const day = currentDate.getDate();
+// let x = `${day}/${month}/${year}`;
+// console.log(x);
+
+const TakeClaassWiseAttandance = () => {
+  // const token = useSelector((state: any) => state.name);
+  // console.log("myname", `Bearer ${token}`);
+  const token = Cookies.get("token");
+  console.log("myname", token);
+  const academicdata = useSelector((state: any) => state.academicName);
+  console.log("academicdata", academicdata);
+  const classdata = useSelector((state: any) => state.className);
+  console.log("classdata", classdata);
+  const sectiondata = useSelector((state: any) => state.sectionName);
+  console.log("sectiondata", sectiondata);
+  const [data, setData] = useState([]);
+  const [datap, setDatap] = useState([]);
+  // const [showTable, setShowTable] = useState(false);
+  const [remarkValue, setRemarkValue] = useState();
+
+  const [openPopup, setOpenPopup] = useState(false);
+  const { values, errors, touched, handleBlur, handleChange, handleSubmit } = useFormik({
+    initialValues,
+    validationSchema: attandanceSchema,
+    enableReinitialize: true,
+    onSubmit: (values, action) => {
+      console.log("values", values);
+      action.resetForm();
+    },
+  });
+  console.log(errors, "errorrofrj");
+  console.log(values, "formdata");
+  // const submitandshow = () => {
+  //   handleFormSubmit();
+  //   setShowTable(true);
+  // };
+  const handleFormSubmit = async () => {
+    try {
+      const response = await axios.post(
+        `http://10.0.20.133:8000/mg_student_all_attendances/`,
+        values,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log(response.data);
+      setData(response.data);
+      console.log(data, "data i have to send");
+      if (response.status === 200) {
+        console.log(" Created SchoolPage Successfully");
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
+  };
+
+  console.log(remarkValue, "remark daata ");
+  const handleAttandanceSubmit = async () => {
+    try {
+      const requestData = data.map((row) => ({
+        admission_number: row.admission_number,
+        student_first_name: row.student_first_name,
+        student_second_name: row.student_second_name,
+        student_last_name: row.student_last_name,
+        mg_period_table_entry_id: 0,
+        mg_class_name: row.mg_class_name,
+        mg_section_name: row.mg_section_name,
+        mg_academic_year_name: row.academic_name,
+        remark: "gfgfcgfgs",
+        absent_date: "gvx",
+        attendance: "jghcf",
+
+        //       "student_first_name": "string",
+        // "student_second_name": "string",
+        // "student_last_name": "string",
+        // "mg_section_name": "string",
+        // "mg_period_table_entry_id": 0,
+        // "mg_class_name": "string",
+        // "mg_academic_year_name": "string",
+        // "remark": "string",
+        // "absent_date": "string",
+        // "attendance": "present",
+        // "admission_no": "string"
+      }));
+      console.log(requestData, "data i have to postm ");
+      const response = await axios.post(
+        "http://10.0.20.133:8000/mg_student_attendance",
+        requestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log(response.data);
+      setData(response.data);
+      console.log(data, "data I have to send");
+      if (response.status === 200) {
+        console.log("Created SchoolPage Successfully");
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
+  };
+
+  const handleAttendanceChange = (index: number, selected: number) => {
+    // Update 'data' state using 'setData'
+    const updatedData = [...data];
+    updatedData[index].attendance = options[selected];
+    updatedData[index].selected = selected;
+    setDatap(updatedData);
+  };
+  console.log(data, "data on ataandance ");
+  const dataTableData = {
+    columns: [
+      { Header: `${"Admission No"}`, accessor: "admission_number" },
+      { Header: `${"Student Name "}`, accessor: "student_first_name" },
+
+      { Header: `${"attendance"}`, accessor: "attendance" },
+      { Header: `${"remark"}`, accessor: "remark" },
+    ],
+
+    rows: Array.isArray(data)
+      ? data.map(
+          (
+            row: {
+              selected: number;
+              admission_number: any;
+              student_first_name: any;
+              attendance: any;
+              remark: any;
+            },
+            index: any
+          ) => ({
+            admission_number: <p>{row.admission_number}</p>,
+            student_first_name: <p>{row.student_first_name}</p>,
+            attendance: (
+              <Grid container spacing={3}>
+                {options.map((option, selectedIndex) => (
+                  <Grid item xs={12} sm={5} key={option}>
+                    <Fab
+                      color={row.selected === selectedIndex ? colors[selectedIndex] : "default"}
+                      onClick={() => {
+                        handleAttendanceChange(index, selectedIndex);
+                        // if (option === "A" || "L" || "HD") {
+                        //   setOpenPopup(true);
+                        // }
+                      }}
+                      sx={{
+                        boxShadow: "none",
+                        padding: "0px",
+                        // fontSize: "0.63rem",
+                        // width: "33px",
+                        // height: "5px",
+                      }}
+                      size="small"
+                    >
+                      {option}
+                    </Fab>
+                  </Grid>
+                ))}
+              </Grid>
+            ),
+            remark: (
+              <MDInput
+                // value={remarks[index]} // Use the individual remark value
+                onChange={handleChange} // Handle remark change
+                onClick={() => {
+                  setOpenPopup(true);
+                }}
+              />
+            ),
+          })
+        )
+      : [],
+  };
+  return (
+    <>
+      <Dialog open={openPopup}>
+        <Grid item xs={12} sm={3} mt={2} mr={1} display="flex" justifyContent="flex-end">
+          <>
+            <form onSubmit={handleSubmit}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={12} textAlign="right">
+                  <MDButton
+                    variant="gradient"
+                    color="error"
+                    onClick={() => setOpenPopup(false)}
+                    sx={{ marginRight: "5px" }}
+                  >
+                    {"Cancel"}
+                  </MDButton>
+                  <MDButton
+                    variant="gradient"
+                    color="info"
+                    onClick={() => {
+                      setRemarkValue(values.Remark); // Save the remark value
+                      setOpenPopup(false); // Close the popup
+                    }}
+                  >
+                    {"Save"}
+                  </MDButton>
+                </Grid>
+                <Grid item xs={12} sm={12}>
+                  <MDBox p={3} mb={1} ml={0.5} lineHeight={0} display="inline-block">
+                    <MDTypography
+                      component="label"
+                      variant="button"
+                      fontWeight="regular"
+                      color="text"
+                    >
+                      {"Remark"}&nbsp;&nbsp;
+                    </MDTypography>
+                    <FormField
+                      type="name"
+                      name="Remark"
+                      label={"Enter Text"}
+                      value={values.Remark}
+                      multiline
+                      rows={6}
+                      sx={{ width: "100%" }}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={errors.Remark && touched.Remark}
+                      success={values.Remark.length && !errors.Remark}
+                    />
+                    {errors.Remark && touched.Remark && (
+                      <MDTypography variant="caption" fontWeight="regular" color="error">
+                        {errors.Remark}
+                      </MDTypography>
+                    )}
+                  </MDBox>
+                </Grid>
+              </Grid>
+            </form>
+          </>
+        </Grid>
+      </Dialog>
+      <DashboardLayout>
+        <DashboardNavbar />
+        <Card sx={{ width: "80%", margin: "auto", mt: "2%" }}>
+          <form onSubmit={handleSubmit}>
+            <MDBox p={3}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={9}>
+                  <MDTypography variant="h5">{"Attandance"}</MDTypography>
+                </Grid>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <Grid item xs={12} sm={3}>
+                    <MobileDatePicker
+                      label=" Date"
+                      format="DD/MM/YYYY"
+                      // maxDate={new Date().getDate()}
+                      // value={dayjs(values.start_date)}
+                      // disabled={editData.showData ? true : false}
+                      // onChange={(value) => setStartDate(value)}
+
+                      // error={errors.start_date && touched.start_date}
+                    />
+                    {/* {errors.start_date && touched.start_date && (
+                      <MDTypography variant="caption" fontWeight="regular" color="error">
+                        {errors.start_date}
+                      </MDTypography>
+                    )} */}
+                  </Grid>
+                </LocalizationProvider>
+              </Grid>
+            </MDBox>
+            <MDBox p={3}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={3}>
+                  {/* <MDBox mb={1.9} display="inline-block">
+                    <MDTypography
+                      component="label"
+                      variant="button"
+                      fontWeight="regular"
+                      color="text"
+                      textTransform="capitalize"
+                    >
+                      {"Academic Year"}
+                    </MDTypography>
+                  </MDBox> */}
+                  {/* <Autocomplete
+                    // name="academic_name"
+                    // value={values.academic_name}
+                    // onChange={handleChange}
+                    // onBlur={handleBlur}
+                    defaultValue={
+                      academicdata && academicdata.length > 0 ? academicdata[0]?.academic_name : ""
+                    }
+                    options={
+                      academicdata && academicdata.length > 0
+                        ? academicdata.map(
+                            (academic: { academic_name: any }) => academic.academic_name
+                          )
+                        : ["Select Academic"]
+                    }
+                    // options=["jidfidahb"]
+                    // value={values.options}
+                    renderInput={(params) => <MDInput {...params} variant="standard" />}
+                  /> */}
+                  <InputLabel htmlFor="is_break">Academic year</InputLabel>
+                  <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+                    <Select
+                      id="academic_name"
+                      name="academic_name"
+                      labelId="demo-simple-select-standard-label"
+                      label="academic_name"
+                      value={values.academic_name}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      // error={errors.academic_name && touched.academic_name}
+                    >
+                      {/* <MenuItem value="">Select Deduction</MenuItem> */}
+                      {academicdata && academicdata.length > 0 ? (
+                        academicdata.map((academic: any) => (
+                          <MenuItem key={academic.id} value={academic.academic_name}>
+                            {academic.academic_name}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem value="">No academic data</MenuItem>
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  {/* <MDBox mb={1.9} display="inline-block">
+                    <MDTypography
+                      component="label"
+                      variant="button"
+                      fontWeight="regular"
+                      color="text"
+                      textTransform="capitalize"
+                    >
+                      {" Class"}
+                    </MDTypography>
+                  </MDBox> */}
+                  {/* <Autocomplete
+                    defaultValue={
+                      classdata && classdata.length > 0 ? classdata[0]?.course_name : ""
+                    }
+                    // name="class_name"
+                    // value={values.class_name}
+                    // onChange={handleChange}
+                    // onBlur={handleBlur}
+                    options={
+                      classdata && classdata.length > 0
+                        ? classdata.map((academic: { course_name: any }) => academic.course_name)
+                        : ["Select Class"]
+                    }
+                    renderInput={(params) => <MDInput {...params} variant="standard" />}
+                  /> */}
+                  <InputLabel htmlFor="is_break">Class Name</InputLabel>
+                  <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+                    <Select
+                      id="class_name"
+                      name="class_name"
+                      labelId="demo-simple-select-standard-label"
+                      label="class_name"
+                      value={values.class_name}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      // error={errors.academic_name && touched.academic_year}
+                    >
+                      {/* <MenuItem value="">Select Deduction</MenuItem> */}
+                      {classdata && classdata.length > 0 ? (
+                        classdata.map((academic: any) => (
+                          <MenuItem key={academic.id} value={academic.course_name}>
+                            {academic.course_name}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem value="">No Class data</MenuItem>
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  {/* <MDBox mb={1.9} display="inline-block">
+                    <MDTypography
+                      component="label"
+                      variant="button"
+                      fontWeight="regular"
+                      color="text"
+                      textTransform="capitalize"
+                    >
+                      {"Section"}
+                    </MDTypography>
+                  </MDBox> */}
+                  {/* <Autocomplete
+                    // name="section_name"
+                    // value={values.section_name}
+                    // onChange={handleChange}
+                    // onBlur={handleBlur}
+                    defaultValue={
+                      sectiondata && sectiondata.length > 0 ? sectiondata[0]?.batch_name : ""
+                    }
+                    options={
+                      sectiondata && sectiondata.length > 0
+                        ? sectiondata.map((academic: { batch_name: any }) => academic.batch_name)
+                        : ["Select Section"]
+                    }
+                    // value={
+                    //   sectiondata && sectiondata.length > 0
+                    //     ? sectiondata.map((academic: { batch_name: any }) => academic.batch_name)
+                    //     : ["Select Section"]
+                    // }
+                    renderInput={(params) => <MDInput {...params} variant="standard" />}
+                  /> */}
+                  <InputLabel htmlFor="is_break">Section Name</InputLabel>
+                  <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+                    <Select
+                      id="section_name"
+                      name="section_name"
+                      labelId="demo-simple-select-standard-label"
+                      label="section_name"
+                      value={values.section_name}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      // error={errors.academic_year && touched.academic_year}
+                    >
+                      {/* <MenuItem value="">Select Deduction</MenuItem> */}
+                      {sectiondata && sectiondata.length > 0 ? (
+                        sectiondata.map((academic: any) => (
+                          <MenuItem key={academic.id} value={academic.batch_name}>
+                            {academic.batch_name}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem value="">No Class data</MenuItem>
+                      )}
+                    </Select>
+                    {errors.section_name && touched.section_name ? (
+                      <MDTypography variant="caption" fontWeight="regular" color="error">
+                        {errors.section_name}
+                      </MDTypography>
+                    ) : null}
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
+                  <MDButton
+                    type="submit"
+                    variant="gradient"
+                    color="info"
+                    onClick={handleFormSubmit}
+                  >
+                    {"Take Attendance"}
+                  </MDButton>
+                  {/* <MDButton
+                    // type="submit"
+                    variant="gradient"
+                    color="info"
+                    onClick={() => setShowTable(true)}
+                  >
+                    {"show table"}
+                  </MDButton> */}
+                </Grid>
+              </Grid>
+            </MDBox>
+            <DataTable table={dataTableData} />
+            {/* {data ? <ClassWiseAttandanceTable data={data} /> : ""} */}
+            <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
+              <MDButton
+                type="submit"
+                variant="gradient"
+                color="info"
+                onClick={handleAttandanceSubmit}
+              >
+                {"Submit Attendance"}
+              </MDButton>
+            </Grid>
+          </form>
+        </Card>
+      </DashboardLayout>
+    </>
+  );
+};
+
+export default TakeClaassWiseAttandance;
